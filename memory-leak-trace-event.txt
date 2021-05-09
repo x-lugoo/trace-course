@@ -1,0 +1,44 @@
+
+trace event解决内存泄漏案例：
+
+复现内存泄漏bug:
+while true; do cat /proc/schedstat > /dev/null  ;done;
+
+查看进程使用的物理内存：
+while true; do ps -e -o pid,comm,%mem | sort -n -r -k 3  | head -n 10 ;echo "----------"; sleep 1; done
+
+计算使用的slab的内存并排序
+while true; do cat /proc/slabinfo | awk '{name=$1; size=$2*$4/4096; printf "%s %lu\n", name, size;}'  | sort -n -r -k 2 | head -n 20; echo "--------------"; sleep 1;done;
+
+
+trace工具排除：
+trace-cmd record -e kmalloc -f 'bytes_alloc==4096' -e kfree –T
+trace-cmd report > ./1
+for i in `cat ./1 | grep kmalloc | grep -o 'ptr=[^ ]\+'`;do echo $i; grep $i ./1 | wc -l;done
+或者
+for i in `awk /kmalloc/'{print $7}' ./1`;do  echo $i; grep $i ./1 | wc -l;done
+
+。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。
+
+cat /proc/meminfo
+
+MemTotal:
+MemFree:
+
+used: = MemTotal - MemFree
+
+
+Active:
+Inactive:
+Unevictable:
+Slab:
+KernelStack:
+PageTables:
+
+
+计算未统计的内存：
+while true;do cat /proc/meminfo | awk '{if($1=="Active:" || $1=="Inactive:" || $1=="Unevictable:" || $1=="Slab:" || $1=="KernelStack:" || $1=="PageTables:") u+=$2; if($1=="MemTotal:") used+=$2; if ($1=="MemFree:") used-=$2;}END{print used-u}'; sleep 1;done
+
+
+
+
