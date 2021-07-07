@@ -39,6 +39,9 @@ PageTables:
 计算未统计的内存：
 while true;do cat /proc/meminfo | awk '{if($1=="Active:" || $1=="Inactive:" || $1=="Unevictable:" || $1=="Slab:" || $1=="KernelStack:" || $1=="PageTables:") u+=$2; if($1=="MemTotal:") used+=$2; if ($1=="MemFree:") used-=$2;}END{print used-u}'; sleep 1;done
 
+More detailed display:
+while sleep 1 ;do cat /proc/meminfo | awk '{if($1=="Active:" || $1=="Inactive:" || $1=="Unevictable:" || $1=="Slab:" || $1=="KernelStack:" || $1=="PageTables:") u+=$2; if($1=="MemTotal:") used+=$2; if ($1=="MemFree:") used-=$2;}END{printf "total-used:%d used%d un:%d\n",used, u, used-u}';done
+
 
 
 
